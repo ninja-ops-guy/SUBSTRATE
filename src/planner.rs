@@ -24,11 +24,24 @@ pub struct MemoryRequirements {
 
 #[derive(Debug)]
 pub enum SchedulingDecision {
-    Accept { node: u32, requirements: MemoryRequirements },
-    DegradeToQuant { suggested: String, savings_gb: f64 },
-    EvictLowerPriority { candidates: Vec<String>, freed_gb: f64 },
-    QueueRequest { retry_after_secs: u64 },
-    Reject { reason: String },
+    Accept {
+        node: u32,
+        requirements: MemoryRequirements,
+    },
+    DegradeToQuant {
+        suggested: String,
+        savings_gb: f64,
+    },
+    EvictLowerPriority {
+        candidates: Vec<String>,
+        freed_gb: f64,
+    },
+    QueueRequest {
+        retry_after_secs: u64,
+    },
+    Reject {
+        reason: String,
+    },
 }
 
 #[derive(Debug, Clone)]
@@ -131,11 +144,9 @@ impl CapacityPlanner {
         let requested_gb = requirements.total_gb.ceil() as u64;
 
         if let Some(node) = preferred_node {
-            if self
-                .topology
-                .get(&node)
-                .is_some_and(|m| m.total_node_gb.saturating_sub(m.active_reservations_gb) >= requested_gb)
-            {
+            if self.topology.get(&node).is_some_and(|m| {
+                m.total_node_gb.saturating_sub(m.active_reservations_gb) >= requested_gb
+            }) {
                 return SchedulingDecision::Accept { node, requirements };
             }
         }
@@ -144,7 +155,9 @@ impl CapacityPlanner {
             .topology
             .iter()
             .filter_map(|(id, metrics)| {
-                let available = metrics.total_node_gb.saturating_sub(metrics.active_reservations_gb);
+                let available = metrics
+                    .total_node_gb
+                    .saturating_sub(metrics.active_reservations_gb);
                 (available >= requested_gb).then_some((*id, available))
             })
             .max_by_key(|(_, available)| *available)
