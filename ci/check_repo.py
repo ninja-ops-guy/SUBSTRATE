@@ -15,6 +15,7 @@ rollback = Path("src/rollback.rs").read_text()
 
 require("ctrlc =" in cargo, "ctrlc dependency must be declared")
 require("read_events_timeout" not in cgroupd, "unsupported inotify timeout API must not be used")
+require("ErrorKind::WouldBlock" in cgroupd, "nonblocking inotify idle cycles must not terminate cgroupd")
 require("Type=notify" not in Path("systemd/omarchy-configd.service").read_text(), "configd must not claim sd_notify readiness")
 require("Type=notify" not in Path("systemd/omarchy-cgroupd.service").read_text(), "cgroupd must not claim sd_notify readiness")
 require("rename(&live_tmp, &live_file)" in configd, "config publish must end in same-filesystem atomic rename")
