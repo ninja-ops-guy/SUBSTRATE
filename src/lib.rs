@@ -8,7 +8,6 @@ pub mod events;
 pub mod kv_isolation;
 pub mod oom_matrix;
 pub mod os_boundary;
-pub mod oom_matrix;
 pub mod planner;
 pub mod rollback;
 
