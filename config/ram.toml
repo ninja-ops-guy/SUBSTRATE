@@ -1,0 +1,15 @@
+[ram]
+total = "auto"
+workspace = "96G"
+cache = "auto"
+hugepages_2m = "auto"
+hugepages_1g = 0
+
+[ram.zram]
+size = "64G"
+algo = "zstd"
+
+[ram.cgroups]
+agent.reserved = "80G"
+agent.cpu = "0-15"
+system.max = "32G"
