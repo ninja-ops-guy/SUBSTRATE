@@ -36,6 +36,10 @@ for line in workflow.splitlines():
 
 require("persist-credentials: false" in workflow, "checkout credentials must not persist")
 require("toolchain: 1.98.1" in workflow, "CI Rust toolchain must be version-pinned")
+require(Path("src/Cargo.lock").exists(), "Cargo.lock must be committed")
+require("cargo check --locked --all-targets" in workflow, "cargo check must use --locked")
+require("cargo test --locked --all-targets" in workflow, "cargo test must use --locked")
+require("cargo clippy --locked --all-targets -- -D warnings" in workflow, "cargo clippy must use --locked")
 
 if failures:
     for failure in failures:
