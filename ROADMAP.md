@@ -5,17 +5,17 @@
 
 ## Current State
 
-Architecture and interface specifications exist. The Rust core is being placed under clean-runner CI and corrected where the initial bundle made claims that exceeded implementation evidence.
+The Rust core is now on `main` with clean-runner CI green. The Phase 2 qualification harness is implemented on a dedicated branch with local regression evidence, but physical R720 qualification and destructive recovery evidence are still open.
 
 The correct release posture is:
 
-**v0.1 core implementation candidate; production qualification pending.**
+**v0.1 core implementation candidate + Phase 2 qualification harness candidate; production qualification pending.**
 
 A checkmark in this roadmap means implementation or specification evidence exists. It does not substitute for R720 qualification, failure injection, security review, or release acceptance.
 
 ## Workstreams
 
-### A. Core repository + CI — IN PROGRESS
+### A. Core repository + CI — COMPLETE
 
 - [x] Establish public SUBSTRATE repository
 - [x] Add Rust package, core modules, daemons, systemd units, configs, scripts
@@ -28,30 +28,39 @@ A checkmark in this roadmap means implementation or specification evidence exist
 - [x] Make config publish use same-filesystem atomic rename
 - [x] Bound config socket payload size
 - [x] Replace assumed Ollama session-delete behavior with documented model unload semantics
-- [ ] All CI jobs green on final bootstrap head
-- [ ] Merge bootstrap PR to `main`
+- [x] All bootstrap CI jobs green on `main` head `b2710220…`
+- [x] Bootstrap baseline merged to `main`
 
-### B. R720 hardware qualification — OWNER LANE
+### B. R720 hardware qualification — HARNESS READY / EXECUTION OPEN
 
-- [ ] Capture immutable host/firmware/CPU/RAM/storage baseline
-- [ ] Discover NUMA topology and locality
-- [ ] Measure local/remote bandwidth and latency
-- [ ] Validate cgroup v2 controller availability/delegation
-- [ ] Exercise zram reclaim/demotion
-- [ ] Produce machine-readable qualification receipt
+- [x] Add automated NUMA, memory, storage, cgroup-v2, and PSI qualification harness
+- [x] Preserve PASS / FAIL / SKIP / ERROR distinctly; SKIP cannot qualify a run
+- [x] Add machine-readable JSON and human-readable Markdown receipts
+- [ ] Capture immutable host/firmware/CPU/RAM/storage baseline on the R720
+- [ ] Discover and verify NUMA topology/locality on the target host
+- [ ] Measure local/remote bandwidth and latency with qualification tooling installed
+- [ ] Validate cgroup v2 controller availability/delegation on the target host
+- [ ] Exercise zram reclaim/demotion on the target host
+- [ ] Produce final machine-readable qualification receipt with no required FAIL/ERROR/SKIP
 
-This lane is being developed separately and converges with repository release gates.
+### C. Interlock + failure injection — IMPLEMENTED CANDIDATE / HARDWARE QUALIFICATION OPEN
 
-### C. Interlock + failure injection — OWNER LANE
-
-- [ ] Implement pre-freeze/quiescence interlock
-- [ ] Prove safe behavior with open files/locks and stuck workers
-- [ ] OOM recovery injection
-- [ ] config corruption/rejection injection
-- [ ] daemon crash/restart injection
+- [x] Implement pre-freeze/cooperative quiescence interlock
+- [x] Add file-backed cross-process lock declarations
+- [x] Correct `/proc/locks` PID/device/inode parsing and FD-to-path resolution
+- [x] Require callbacks to release and unregister exclusive resources before yield acknowledgment
+- [x] Resume surviving SIGSTOP workers on thaw/failure paths
+- [x] Fail closed when lingering declared exclusive locks remain
+- [x] Add bounded OOM, campaign-owned stall, cgroup-write rejection, and daemon-death injection lanes
+- [x] Keep checkpoint-corruption lane blocked until disposable-clone + verifier semantics exist
+- [x] Add regression suite: 16 pass locally; root-only R720 integration intentionally skipped outside target host
+- [ ] Root-only SIGUSR2 → SIGSTOP → cgroup freeze → thaw integration PASS on R720
+- [ ] Repeated lock-contention and timeout stress evidence
+- [ ] OOM/governor recovery evidence from a finite, isolated cgroup
+- [ ] daemon crash/restart reconciliation evidence
 - [ ] rollback partial-failure injection
 - [ ] snapshot exhaustion / missing snapshot injection
-- [ ] verify evidence retention for each failure
+- [ ] verify durable evidence retention for every live failure lane
 
 ### D. Core safety and recovery — PARTIAL
 
@@ -73,7 +82,7 @@ Still required:
 - [ ] crash consistency tests
 - [ ] target-host privilege/capability review
 
-### E. Inference integration — OPEN
+### E. Inference integration — OPEN / GATED
 
 - [ ] Query installed Ollama/runtime capabilities rather than assuming them
 - [ ] model metadata ingestion for planner calibration
@@ -82,9 +91,9 @@ Still required:
 - [ ] preload/unload lifecycle qualification
 - [ ] TTFT and throughput baseline/after-pressure measurements
 
-No tensor-split or session-persistence feature is considered available until verified against the selected runtime/version.
+Ollama integration remains gated on target-host interlock and failure-recovery evidence. No tensor-split or session-persistence feature is considered available until verified against the selected runtime/version.
 
-### F. RESIDUAL MCP integration — OPEN
+### F. RESIDUAL MCP integration — OPEN / GATED
 
 - [x] Interface specification
 - [ ] MCP transport implementation
@@ -95,6 +104,8 @@ No tensor-split or session-persistence feature is considered available until ver
 - [ ] correlation IDs and durable audit receipts
 - [ ] restart/replay/idempotency tests
 - [ ] RESIDUAL adapter/conformance tests
+
+Mutating MCP integration remains downstream of the same hardware, interlock, rollback, and authorization evidence gates.
 
 ### G. Security hardening — OPEN
 
@@ -129,10 +140,11 @@ The project is **not production-ready** until all release-qualification gates ab
 
 ## Near-Term Convergence
 
-1. Green the bootstrap CI and merge the complete repository baseline.
-2. Accept R720 qualification artifacts from the hardware lane.
-3. Merge/qualify the interlock and failure-injection harness.
-4. Implement the narrowest useful read-only MCP surface.
-5. Add mutating MCP tools only after authorization and rollback semantics are qualified.
-6. Run security hardening and dependency audit.
-7. Cut `v0.1.0-rc1` only from an exact qualified SHA.
+1. Get the Phase 2 harness PR green in GitHub Actions and merge it.
+2. Execute the R720 hardware qualification and bind its receipts to an exact commit/version.
+3. Run the root-only interlock lifecycle and lock-contention stress campaign.
+4. Execute bounded failure injection and reconcile every recovery result.
+5. Complete rollback verifier/disposable-clone semantics, then enable the blocked checkpoint lane.
+6. Only after those gates pass, begin Ollama integration and the narrowest useful read-only MCP surface.
+7. Run security hardening and dependency audit.
+8. Cut `v0.1.0-rc1` only from an exact qualified SHA.
