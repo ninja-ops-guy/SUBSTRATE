@@ -86,14 +86,20 @@ impl CgroupDaemon {
     fn run(&mut self, shutdown: Arc<AtomicBool>) -> Result<(), DaemonError> {
         let mut buffer = [0_u8; 4096];
         while !shutdown.load(Ordering::Relaxed) {
-            let events = self.inotify.read_events(&mut buffer)?;
-            let names = events
-                .filter_map(|event| event.name.map(OsStr::to_owned))
-                .collect::<Vec<_>>();
+            let names = match self.inotify.read_events(&mut buffer) {
+                Ok(events) => events
+                    .filter_map(|event| event.name.map(OsStr::to_owned))
+                    .collect::<Vec<_>>(),
+                Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => {
+                    std::thread::sleep(Duration::from_millis(50));
+                    continue;
+                }
+                Err(error) => return Err(error.into()),
+            };
             for name in names {
                 self.handle_event_name(&name);
             }
-            std::thread::sleep(Duration::from_millis(100));
+            std::thread::sleep(Duration::from_millis(50));
         }
         Ok(())
     }
