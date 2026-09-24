@@ -2,7 +2,7 @@
 
 ## Status
 
-Implemented as an additive desired-state layer on the `nixos/base-pivot` branch.
+Implemented on `main` as an additive desired-state layer. The runtime package is built reproducibly from the committed Cargo lock through the Nix flake.
 
 This does **not** replace the SUBSTRATE Rust control plane. NixOS owns slow-changing
 host desired state; the Rust daemons continue to own the fast runtime loop.
@@ -58,15 +58,16 @@ The current architecture is preserved: iDRAC7 is out-of-band recovery infrastruc
 and is not exposed to the normal agent authority domain. Any future automated iDRAC
 controller must be a separately authenticated recovery plane.
 
-## Current limitation: Rust package closure
+## Runtime package closure
 
-The NixOS module accepts `services.substrate.package`, but the repository does not
-yet contain a committed Cargo lock/vendor closure suitable for reproducible Nix
-packaging. Until that is added, the NixOS host profile evaluates and builds without
-starting `omarchy-configd` or `omarchy-cgroupd`.
+The repository commits both `flake.lock` and `src/Cargo.lock`. The NixOS module
+defaults `services.substrate.package` to the in-tree `nix/package.nix` derivation,
+which builds and tests `omarchy-configd` and `omarchy-cgroupd` from the locked
+dependency graph.
 
-This is fail-safe by design: absence of a verified runtime package does not silently
-fall back to an impure network build.
+The installer image includes the runtime package for inspection and installation but
+sets `services.substrate.daemons.enable = false` so host-control daemons do not
+automatically run in the live installation environment.
 
 ## Build/evaluation
 
@@ -74,10 +75,13 @@ With Nix installed and flakes enabled:
 
 ```bash
 nix flake check --no-build
+nix build .#packages.x86_64-linux.substrate
 nix eval .#nixosConfigurations.substrate-r720-eval.config.system.build.toplevel.drvPath
 nix build .#packages.x86_64-linux.installer
 ```
 
-The `substrate-r720-eval` configuration is intentionally non-bootable/containerized for CI evaluation; a physical host must add its generated disk, root filesystem, encryption, and boot-loader configuration.\n\nThe resulting installer is a minimal NixOS ISO with SUBSTRATE host scaffolding and
+The `substrate-r720-eval` configuration is intentionally non-bootable/containerized for CI evaluation; a physical host must add its generated disk, root filesystem, encryption, and boot-loader configuration.
+
+The resulting installer is a minimal NixOS ISO with SUBSTRATE host scaffolding and
 R720 qualification tools. Device-specific disk layout, encryption, boot loader, and
 PERC policy remain owner/hardware qualification inputs.
