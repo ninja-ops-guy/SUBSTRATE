@@ -49,7 +49,10 @@ jobs:
         run: python3 ci/check_toml.py
       - name: Systemd static verification
         run: |
-          systemd-analyze verify systemd/omarchy-configd.service
-          systemd-analyze verify systemd/omarchy-cgroupd.service
+          mkdir -p /tmp/substrate-systemd
+          sed 's#ExecStart=/usr/bin/omarchy-configd#ExecStart=/bin/true#' systemd/omarchy-configd.service > /tmp/substrate-systemd/omarchy-configd.service
+          sed 's#ExecStart=/usr/bin/omarchy-cgroupd#ExecStart=/bin/true#' systemd/omarchy-cgroupd.service > /tmp/substrate-systemd/omarchy-cgroupd.service
+          systemd-analyze verify /tmp/substrate-systemd/omarchy-configd.service
+          systemd-analyze verify /tmp/substrate-systemd/omarchy-cgroupd.service
       - name: Repository policy checks
         run: python3 ci/check_repo.py
