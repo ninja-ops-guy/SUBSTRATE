@@ -1,0 +1,17 @@
+[governor]
+tick_hz = 10
+target_band = { psi_some_max = 20, psi_full_max = 5 }
+aggressiveness = "moderate"
+
+[governor.bounds]
+workspace_min = "32G"
+workspace_max = "128G"
+zram_min = "16G"
+zram_max = "64G"
+memory_high_floor = "16G"
+
+[governor.kv]
+demote_to_zram_psi = 30
+demote_to_cxl_psi = 50
+demote_to_nvme_psi = 70
+promote_to_dram_psi = 10
