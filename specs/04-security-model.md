@@ -53,6 +53,8 @@ Target agent posture:
 
 Privilege elevation must require an independently authorized administrative path. Exact authentication and break-glass mechanics are implementation/qualification requirements, not assumptions.
 
+Models, harnesses, and skills are requesters rather than authorization authorities. Semantic OS operations are classified as READ, CHANGE, or DANGEROUS before execution; unknown operations fail closed. Machine policy outranks user/project/model policy, and diagnosis tasks must mechanically exclude mutating operations.
+
 ---
 
 ## 4. Disk & Network
