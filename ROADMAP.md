@@ -40,7 +40,7 @@ A checkmark in this roadmap means implementation or specification evidence exist
 - [x] Add Nix evaluation CI
 - [x] Preserve iDRAC as a separate out-of-band trust boundary
 - [x] Preserve Btrfs for mutable-data recovery rather than package rollback
-- [ ] Commit a flake lock bound to the selected nixpkgs revision
+- [x] Commit a flake lock bound to the selected nixpkgs revision
 - [ ] Commit Cargo dependency lock/vendor closure
 - [ ] Build the Rust daemons reproducibly as a Nix package
 - [ ] Enable omarchy-configd/omarchy-cgroupd from the qualified Nix package
