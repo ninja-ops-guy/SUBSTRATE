@@ -2,7 +2,7 @@
 
 ## 1. Design Principle
 
-The preferred agent control surface is typed and policy-checked rather than an unrestricted shell. Every mutating tool must be:
+The preferred agent control surface is typed and policy-checked rather than an unrestricted shell. MCP transports the semantic operation vocabulary defined in `07-ai-os-boundary.md`; harness-specific approval flags never authorize OS operations. Every mutating tool must be:
 
 - schema-validated
 - authorization/policy checked
@@ -39,7 +39,7 @@ Mutating:
 └── governor.set_policy(key, value)
 ```
 
-High-risk tools such as rollback, resource-limit changes, service restart, and governor-policy mutation require explicit authorization semantics and fail-closed behavior.
+Tools map to the shared READ / CHANGE / DANGEROUS classes. Service restart is CHANGE; rollback, resource-limit changes, and governor-policy mutation are DANGEROUS. Unknown operations fail closed. Diagnosis-only tasks expose READ tools only.
 
 ---
 
