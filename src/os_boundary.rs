@@ -45,22 +45,13 @@ pub fn classify(request: OperationRequest) -> Result<ClassifiedRequest, Boundary
     }
 
     let (permission_class, requires_privilege) = match request.operation.as_str() {
-        "system.identify"
-        | "memory.snapshot"
-        | "crash.list"
-        | "crash.inspect"
-        | "journal.query"
-        | "service.status"
-        | "package.query"
-        | "network.snapshot"
-        | "cgroup.usage"
-        | "governor.metrics"
-        | "snapshot.list" => (PermissionClass::Read, false),
+        "system.identify" | "memory.snapshot" | "crash.list" | "crash.inspect"
+        | "journal.query" | "service.status" | "package.query" | "network.snapshot"
+        | "cgroup.usage" | "governor.metrics" | "snapshot.list" => (PermissionClass::Read, false),
 
-        "service.restart"
-        | "package.install"
-        | "config.patch"
-        | "snapshot.create" => (PermissionClass::Change, true),
+        "service.restart" | "package.install" | "config.patch" | "snapshot.create" => {
+            (PermissionClass::Change, true)
+        }
 
         "snapshot.rollback"
         | "cgroup.set_limit"
