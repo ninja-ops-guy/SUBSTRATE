@@ -26,12 +26,12 @@ predicates = "3"
 
 [[bin]]
 name = "omarchy-cgroupd"
-path = "src/bin/omarchy-cgroupd.rs"
+path = "bin/omarchy-cgroupd.rs"
 
 [[bin]]
 name = "omarchy-configd"
-path = "src/bin/omarchy-configd.rs"
+path = "bin/omarchy-configd.rs"
 
 [lib]
 name = "omarchy_srv"
-path = "src/lib.rs"
+path = "lib.rs"
