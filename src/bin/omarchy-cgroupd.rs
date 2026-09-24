@@ -127,9 +127,7 @@ impl CgroupDaemon {
                 "agent name, runtime, and model must be non-empty".to_string(),
             ));
         }
-        if config.agent.name.contains('/')
-            || matches!(config.agent.name.as_str(), "." | "..")
-        {
+        if config.agent.name.contains('/') || matches!(config.agent.name.as_str(), "." | "..") {
             return Err(DaemonError::Validation(
                 "agent name must be a safe single cgroup component".to_string(),
             ));
@@ -170,11 +168,7 @@ impl CgroupDaemon {
             ("memory.high", res.memory_high_gb),
             ("memory.max", res.effective_max()),
         ] {
-            self.write_cgroup_file(
-                &cgroup_path,
-                name,
-                &(gb * 1024 * 1024 * 1024).to_string(),
-            )?;
+            self.write_cgroup_file(&cgroup_path, name, &(gb * 1024 * 1024 * 1024).to_string())?;
         }
         self.write_cgroup_file(&cgroup_path, "memory.oom.group", "1")?;
         let mems = res
@@ -205,7 +199,10 @@ impl CgroupDaemon {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    tracing_subscriber::fmt().with_target(false).with_level(true).init();
+    tracing_subscriber::fmt()
+        .with_target(false)
+        .with_level(true)
+        .init();
     let shutdown = Arc::new(AtomicBool::new(false));
     let shutdown_clone = Arc::clone(&shutdown);
     ctrlc::set_handler(move || shutdown_clone.store(true, Ordering::Relaxed))?;
