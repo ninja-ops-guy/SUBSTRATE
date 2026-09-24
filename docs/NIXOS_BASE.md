@@ -74,10 +74,10 @@ With Nix installed and flakes enabled:
 
 ```bash
 nix flake check --no-build
-nix eval .#nixosConfigurations.substrate-r720.config.system.build.toplevel.drvPath
+nix eval .#nixosConfigurations.substrate-r720-eval.config.system.build.toplevel.drvPath
 nix build .#packages.x86_64-linux.installer
 ```
 
-The resulting installer is a minimal NixOS ISO with SUBSTRATE host scaffolding and
+The `substrate-r720-eval` configuration is intentionally non-bootable/containerized for CI evaluation; a physical host must add its generated disk, root filesystem, encryption, and boot-loader configuration.\n\nThe resulting installer is a minimal NixOS ISO with SUBSTRATE host scaffolding and
 R720 qualification tools. Device-specific disk layout, encryption, boot loader, and
 PERC policy remain owner/hardware qualification inputs.
