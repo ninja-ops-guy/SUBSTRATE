@@ -67,7 +67,10 @@ impl RollbackCoordinator {
         if model.trim().is_empty() {
             return Err("checkpoint has no Ollama model".to_string());
         }
-        let url = format!("{}/api/generate", self.ollama_endpoint.trim_end_matches('/'));
+        let url = format!(
+            "{}/api/generate",
+            self.ollama_endpoint.trim_end_matches('/')
+        );
         let response = Client::new()
             .post(url)
             .timeout(Duration::from_secs(10))
@@ -97,9 +100,7 @@ impl RollbackCoordinator {
             .status()
             .map_err(|e| RollbackError::Filesystem(e.to_string()))?;
         if !delete.success() {
-            return Err(RollbackError::Filesystem(
-                "btrfs delete failed".to_string(),
-            ));
+            return Err(RollbackError::Filesystem("btrfs delete failed".to_string()));
         }
 
         let snapshot = format!("{}/{}", self.snapshot_path, snapshot_id);
