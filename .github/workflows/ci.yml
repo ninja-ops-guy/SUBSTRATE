@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "bootstrap/**", "ci/**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  rust:
+    name: Rust build, test, clippy
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src
+      - name: Format
+        run: cargo fmt --all -- --check
+      - name: Check
+        run: cargo check --all-targets
+      - name: Test
+        run: cargo test --all-targets
+      - name: Clippy
+        run: cargo clippy --all-targets -- -D warnings
+
+  repository-contracts:
+    name: Repository contracts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bash syntax
+        run: |
+          bash -n scripts/kv-demote-zram.sh
+          bash -n tests/stress-zram-demotion.sh
+      - name: TOML parse
+        run: python3 ci/check_toml.py
+      - name: Systemd static verification
+        run: |
+          mkdir -p /tmp/substrate-systemd
+          sed 's#ExecStart=/usr/bin/omarchy-configd#ExecStart=/bin/true#' systemd/omarchy-configd.service > /tmp/substrate-systemd/omarchy-configd.service
+          sed 's#ExecStart=/usr/bin/omarchy-cgroupd#ExecStart=/bin/true#' systemd/omarchy-cgroupd.service > /tmp/substrate-systemd/omarchy-cgroupd.service
+          systemd-analyze verify /tmp/substrate-systemd/omarchy-configd.service
+          systemd-analyze verify /tmp/substrate-systemd/omarchy-cgroupd.service
+      - name: Repository policy checks
+        run: python3 ci/check_repo.py

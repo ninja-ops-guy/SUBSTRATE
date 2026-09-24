@@ -1,0 +1,21 @@
+[Unit]
+Description=Omarchy-SRV Atomic Configuration Daemon
+Documentation=https://github.com/ninja-ops-guy/SUBSTRATE
+After=local-fs.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/omarchy-configd
+Restart=always
+RestartSec=500ms
+OOMScoreAdjust=-1000
+MemoryMin=128M
+MemoryMax=512M
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/etc/omarchy-srv /run/omarchy-srv
+PrivateTmp=true
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

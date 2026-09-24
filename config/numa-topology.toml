@@ -1,0 +1,10 @@
+[numa.zones]
+zone_0 = { nodes = [0], total_ram_gb = 128, reserved_for = "weights" }
+zone_1 = { nodes = [1], total_ram_gb = 128, reserved_for = "kv_cache, OS" }
+
+[numa.policies.residual-executor]
+primary_zone = "zone_0"
+fallback_policy = "strict_fail"
+kv_overflow_policy = "demote_to_zram"
+kv_soft_limit = "48G"
+kv_hard_limit = "64G"
