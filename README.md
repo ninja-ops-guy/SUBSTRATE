@@ -1,6 +1,6 @@
 # SUBSTRATE
 
-SUBSTRATE is a RAM-first inference and control substrate for NUMA server hardware, initially targeting Dell PowerEdge R720/R720xd systems. The OMARCHY-SRV core combines resource admission, cgroup v2 enforcement, rollback primitives, memory-pressure tooling, and a future typed RESIDUAL control surface.
+SUBSTRATE is a RAM-first inference and control substrate for NUMA server hardware, initially targeting Dell PowerEdge R720/R720xd systems. The host desired-state layer is now based on NixOS, while the OMARCHY-SRV Rust core remains the fast runtime control plane for resource admission, cgroup v2 enforcement, memory pressure, recovery, and a future typed RESIDUAL control surface.
 
 ## Release Posture
 
@@ -19,7 +19,7 @@ The repository intentionally separates:
 - `omarchy-cgroupd` — applies and verifies cgroup v2 resource limits
 - capacity planner — GQA-aware model/KV memory estimation and admission decisions
 - cgroup mapper — validated memory/NUMA constraint application
-- rollback coordinator — freeze → model unload → btrfs restore → Git reset → unfreeze
+- rollback coordinator — runtime quiescence + mutable-data recovery\n- NixOS desired-state layer — generation-based host configuration and rollback
 - OOM/KV isolation primitives
 - zram reclaim stress tooling
 - systemd hardening baseline
@@ -58,3 +58,4 @@ R720 hardware behavior, NUMA assumptions, zram behavior, interlock safety, fault
 ## RESIDUAL Integration
 
 RESIDUAL is intended to sit above SUBSTRATE as a governance/orchestration layer. SUBSTRATE owns resource enforcement and host mechanisms; RESIDUAL owns mission semantics, verification, receipts, and higher-level brakes. The proposed MCP boundary is documented in `specs/06-mcp-interface.md`.
+\n## NixOS Base\n\nThe NixOS pivot is additive: NixOS owns slow-changing host desired state and generation rollback; SUBSTRATE's Rust daemons retain the sub-second runtime control loop. Btrfs remains the recovery mechanism for mutable data that Nix generations cannot revert. See `docs/NIXOS_BASE.md`.\n

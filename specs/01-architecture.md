@@ -4,7 +4,7 @@
 
 **Name:** omarchy-srv  
 **Target hardware:** Dell PowerEdge R720/R720xd (E5-2600 v1/v2, up to 768GB DDR3)  
-**Philosophy:** Omakase for headless inference boxes. One opinionated setup, zero GUI, file-everything, RAM-first I/O, btrfs-snapshot-guarded autonomy.
+**Philosophy:** Omakase for headless inference boxes. One opinionated NixOS base, zero GUI, file-everything, RAM-first I/O, generation-guarded host changes, and btrfs-snapshot-guarded mutable data.
 
 The distro is a **single-purpose inference + control substrate**: the OS exists to give an on-box LLM agent fast, reversible, text-file control over a large RAM pool.
 
@@ -52,14 +52,18 @@ The distro is a **single-purpose inference + control substrate**: the OS exists 
 
 **Key decision:** Model weights in `/srv` (disk, btrfs-compressed zstd:3). Everything hot in `/ram` (tmpfs).
 
-### 3.2 Snapshot Policy
+### 3.2 Recovery Policy
 
-| Trigger | Action | Retention |
-|---------|--------|-----------|
-| Pre-agent-config-change | btrfs snapshot | Last 50 |
-| Nightly | Auto-snapshot | 7 days |
-| Pre-package-upgrade | Snapshot | Last 20 |
-| RAM-only changes | No snapshot (volatile) | N/A |
+Host software/configuration rollback and mutable-data rollback are separate mechanisms.
+
+| Trigger | Host desired state | Mutable data |
+|---------|--------------------|--------------|
+| Candidate host change | Build a new Nix generation | Snapshot only if the change can affect mutable state |
+| Failed activation/health gate | Revert to the previous qualified generation | Restore the bound snapshot when required |
+| Nightly | No generation mutation | Retained btrfs snapshot according to policy |
+| RAM-only runtime change | No Nix rebuild | No snapshot unless durable state is touched |
+
+A Nix generation rollback does not roll back databases, datasets, receipts, or other mutable state. Release and rollback receipts must bind the generation and any required data snapshot together.
 
 ---
 
@@ -144,20 +148,25 @@ tier = 2  # 0=propose, 1=auto+snapshot, 2=auto+tune, 3=unattended
 
 ---
 
-## 7. Package Set & Update Model
+## 7. NixOS Desired-State & Update Model
 
-### Base (lean)
+### Base
 
-linux-lts, btrfs-progs, snapper, zram-generator, numactl, hwloc, openssh, fail2ban, nftables, ollama, redis, postgresql, memcached, git, just, jq, yq, htop, btop, iotop, perf
+The host base is expressed as NixOS modules and a pinned flake input. The initial profile includes the tools required for storage, NUMA, hardware qualification, and SUBSTRATE operation. Workload services remain explicit rather than being assumed present.
 
 ### Explicitly Absent
 
-hyprland, quickshell, wayland-*, xorg-*, pipewire, networkmanager, power-profiles-daemon, upower, cups, bluetooth, avahi
+Desktop/display stacks, Wi-Fi/Bluetooth/audio defaults, and other workstation-oriented services remain outside the server profile unless a qualified use case adds them.
 
 ### Updates
 
-- pacman hooks force btrfs snapshot before transactions
-- Kernel updates require health-check before marking snapshot "good"
+- host changes are source changes that produce a candidate Nix system generation
+- candidate generations are built and evaluated before activation
+- reversible test activation precedes promotion to the boot default
+- failed health/qualification gates revert to the previous qualified generation
+- mutable state recovery remains a separate btrfs/data-snapshot concern
+- exact nixpkgs and dependency inputs must be locked before a release candidate is qualified
+- the sub-second PSI/cgroup/NUMA control loop remains in the Rust runtime and does not invoke Nix rebuilds
 
 ---
 
