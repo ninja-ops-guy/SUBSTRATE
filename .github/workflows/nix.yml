@@ -23,8 +23,8 @@ jobs:
       - uses: actions/checkout@v6
       - uses: cachix/install-nix-action@v31.10.6
       - name: Flake checks
-        run: nix flake check --no-build --no-write-lock-file
+        run: nix flake check --no-build
       - name: R720 system derivation
-        run: nix eval --raw .#nixosConfigurations.substrate-r720.config.system.build.toplevel.drvPath
+        run: nix eval --raw .#nixosConfigurations.substrate-r720-eval.config.system.build.toplevel.drvPath
       - name: Installer derivation
         run: nix eval --raw .#packages.x86_64-linux.installer.drvPath
