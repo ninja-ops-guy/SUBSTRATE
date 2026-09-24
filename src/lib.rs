@@ -2,7 +2,10 @@
 //!
 //! RAM-first agentic server OS components for NUMA server hardware.
 
+pub mod audit;
 pub mod cgroup_mapper;
+pub mod events;
+pub mod os_boundary;
 pub mod kv_isolation;
 pub mod oom_matrix;
 pub mod planner;
