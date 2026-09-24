@@ -134,33 +134,28 @@ impl ConfigDaemon {
 
     fn commit(&self, payload: &[u8]) -> Result<(), String> {
         let staging_file = format!("{STAGING_DIR}/agent.toml");
-        fs::write(&staging_file, payload)
-            .map_err(|e| format!("staging write failed: {e}"))?;
+        fs::write(&staging_file, payload).map_err(|e| format!("staging write failed: {e}"))?;
 
         let slot_0 = format!("{RING_BUFFER_DIR}/slot_0.toml");
         let slot_1 = format!("{RING_BUFFER_DIR}/slot_1.toml");
         let live_file = format!("{LIVE_DIR}/agent.toml");
 
         if Path::new(&slot_1).exists() {
-            fs::remove_file(&slot_1)
-                .map_err(|e| format!("old ring slot removal failed: {e}"))?;
+            fs::remove_file(&slot_1).map_err(|e| format!("old ring slot removal failed: {e}"))?;
         }
         if Path::new(&slot_0).exists() {
-            fs::rename(&slot_0, &slot_1)
-                .map_err(|e| format!("ring rotation failed: {e}"))?;
+            fs::rename(&slot_0, &slot_1).map_err(|e| format!("ring rotation failed: {e}"))?;
         }
         if Path::new(&live_file).exists() {
             fs::copy(&live_file, &slot_0).map_err(|e| format!("ring backup failed: {e}"))?;
         }
 
         let live_tmp = format!("{LIVE_DIR}/.agent.toml.new");
-        fs::copy(&staging_file, &live_tmp)
-            .map_err(|e| format!("live temp copy failed: {e}"))?;
+        fs::copy(&staging_file, &live_tmp).map_err(|e| format!("live temp copy failed: {e}"))?;
         File::open(&live_tmp)
             .and_then(|file| file.sync_all())
             .map_err(|e| format!("live temp sync failed: {e}"))?;
-        fs::rename(&live_tmp, &live_file)
-            .map_err(|e| format!("atomic publish failed: {e}"))?;
+        fs::rename(&live_tmp, &live_file).map_err(|e| format!("atomic publish failed: {e}"))?;
         File::open(LIVE_DIR)
             .and_then(|dir| dir.sync_all())
             .map_err(|e| format!("live directory sync failed: {e}"))?;
