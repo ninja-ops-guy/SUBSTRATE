@@ -1,0 +1,30 @@
+name: NixOS
+
+on:
+  push:
+    branches:
+      - main
+      - "nixos/**"
+      - "bootstrap/**"
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nixos-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  evaluate:
+    name: NixOS module and image evaluation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: cachix/install-nix-action@v31.10.6
+      - name: Flake checks
+        run: nix flake check --no-build --no-write-lock-file
+      - name: R720 system derivation
+        run: nix eval --raw .#nixosConfigurations.substrate-r720.config.system.build.toplevel.drvPath
+      - name: Installer derivation
+        run: nix eval --raw .#packages.x86_64-linux.installer.drvPath
