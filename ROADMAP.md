@@ -41,9 +41,9 @@ A checkmark in this roadmap means implementation or specification evidence exist
 - [x] Preserve iDRAC as a separate out-of-band trust boundary
 - [x] Preserve Btrfs for mutable-data recovery rather than package rollback
 - [x] Commit a flake lock bound to the selected nixpkgs revision
-- [ ] Commit Cargo dependency lock/vendor closure
-- [ ] Build the Rust daemons reproducibly as a Nix package
-- [ ] Enable omarchy-configd/omarchy-cgroupd from the qualified Nix package
+- [x] Commit Cargo dependency lock and checksum-bound crate closure
+- [x] Build and test the Rust daemons reproducibly as a Nix package
+- [x] Wire omarchy-configd/omarchy-cgroupd to the Nix-built package
 - [ ] Add NixOS VM tests for service startup, failure, rollback, and path confinement
 - [ ] Bind Nix system derivation/generation to release qualification receipts
 
@@ -145,10 +145,11 @@ The project is **not production-ready** until all release-qualification gates ab
 
 ## Near-Term Convergence
 
-1. Green the bootstrap CI and merge the complete repository baseline.
+1. Add NixOS VM/service tests for startup, failure, rollback, and confinement.
 2. Accept R720 qualification artifacts from the hardware lane.
-4. Merge/qualify the interlock and failure-injection harness.
-5. Implement the narrowest useful read-only MCP surface.
-6. Add mutating MCP tools only after authorization and rollback semantics are qualified.
-7. Run security hardening and dependency audit.
+3. Merge/qualify the interlock and failure-injection harness.
+4. Implement the narrowest useful read-only MCP surface.
+5. Add mutating MCP tools only after authorization and rollback semantics are qualified.
+6. Run security hardening and dependency audit.
+7. Bind Nix generation + mutable-data snapshot identities into qualification receipts.
 8. Cut `v0.1.0-rc1` only from an exact qualified SHA.

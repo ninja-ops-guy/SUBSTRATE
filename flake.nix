@@ -8,6 +8,8 @@
   outputs = { self, nixpkgs }:
     let
       system = "x86_64-linux";
+      pkgs = nixpkgs.legacyPackages.${system};
+      substratePackage = pkgs.callPackage ./nix/package.nix { };
     in
     {
       nixosModules.substrate = import ./nix/modules/substrate.nix;
@@ -38,10 +40,17 @@
         ];
       };
 
-      packages.${system}.installer =
-        self.nixosConfigurations.substrate-installer.config.system.build.isoImage;
+      packages.${system} = {
+        default = substratePackage;
+        substrate = substratePackage;
+        installer =
+          self.nixosConfigurations.substrate-installer.config.system.build.isoImage;
+      };
 
-      checks.${system}.r720-system =
-        self.nixosConfigurations.substrate-r720-eval.config.system.build.toplevel;
+      checks.${system} = {
+        substrate-package = substratePackage;
+        r720-system =
+          self.nixosConfigurations.substrate-r720-eval.config.system.build.toplevel;
+      };
     };
 }

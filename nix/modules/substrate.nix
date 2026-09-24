@@ -2,23 +2,22 @@
 
 let
   cfg = config.services.substrate;
-  servicePackage =
-    if cfg.package == null
-    then pkgs.runCommandNoCC "substrate-no-runtime-package" { } "mkdir -p $out/bin"
-    else cfg.package;
 in
 {
   options.services.substrate = {
     enable = lib.mkEnableOption "SUBSTRATE host desired-state layer";
 
     package = lib.mkOption {
-      type = lib.types.nullOr lib.types.package;
-      default = null;
-      description = ''
-        Package containing omarchy-configd and omarchy-cgroupd. The NixOS base
-        can be evaluated without it; production activation must provide a
-        reproducibly built package.
-      '';
+      type = lib.types.package;
+      default = pkgs.callPackage ../package.nix { };
+      defaultText = lib.literalExpression "pkgs.callPackage ../package.nix { }";
+      description = "Reproducibly built package containing omarchy-configd and omarchy-cgroupd.";
+    };
+
+    daemons.enable = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = "Start the SUBSTRATE runtime daemons on this host.";
     };
 
     profile = lib.mkOption {
@@ -63,9 +62,6 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    warnings = lib.optional (cfg.package == null)
-      "SUBSTRATE NixOS base is enabled without a runtime package; omarchy daemons are intentionally not started.";
-
     assertions = [
       {
         assertion = cfg.profile != "r720" || cfg.workspace.enable;
@@ -96,6 +92,8 @@ in
       ];
     };
 
+    environment.systemPackages = [ cfg.package ];
+
     environment.etc."omarchy-srv/ram.toml".source = ../../config/ram.toml;
     environment.etc."omarchy-srv/governor.toml".source = ../../config/governor.toml;
     environment.etc."omarchy-srv/numa-topology.toml".source = ../../config/numa-topology.toml;
@@ -109,7 +107,7 @@ in
       "d /var/lib/substrate/receipts 0750 root root -"
     ];
 
-    systemd.services = lib.mkIf (cfg.package != null) {
+    systemd.services = lib.mkIf cfg.daemons.enable {
       omarchy-configd = {
         description = "SUBSTRATE atomic runtime configuration daemon";
         after = [ "local-fs.target" ];
@@ -117,7 +115,7 @@ in
 
         serviceConfig = {
           Type = "simple";
-          ExecStart = "${servicePackage}/bin/omarchy-configd";
+          ExecStart = "${cfg.package}/bin/omarchy-configd";
           Restart = "always";
           RestartSec = "500ms";
           OOMScoreAdjust = -1000;
@@ -145,7 +143,7 @@ in
 
         serviceConfig = {
           Type = "simple";
-          ExecStart = "${servicePackage}/bin/omarchy-cgroupd";
+          ExecStart = "${cfg.package}/bin/omarchy-cgroupd";
           Restart = "always";
           RestartSec = "500ms";
           OOMScoreAdjust = -1000;

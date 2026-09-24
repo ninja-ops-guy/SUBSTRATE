@@ -12,7 +12,7 @@
   services.substrate = {
     enable = true;
     profile = "r720";
-    package = null;
+    daemons.enable = false;
     zram.enable = false;
     workspace.enable = true;
     workspace.size = "16G";

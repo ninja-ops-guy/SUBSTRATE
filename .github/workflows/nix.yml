@@ -24,6 +24,8 @@ jobs:
       - uses: cachix/install-nix-action@v31.10.6
       - name: Flake checks
         run: nix flake check --no-build
+      - name: Build SUBSTRATE runtime package
+        run: nix build .#packages.x86_64-linux.substrate --print-build-logs
       - name: R720 system derivation
         run: nix eval --raw .#nixosConfigurations.substrate-r720-eval.config.system.build.toplevel.drvPath
       - name: Installer derivation
