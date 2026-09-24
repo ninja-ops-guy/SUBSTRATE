@@ -1,0 +1,27 @@
+[Unit]
+Description=Omarchy-SRV Cgroup v2 Hardware Constraint Engine
+Documentation=https://github.com/ninja-ops-guy/SUBSTRATE
+After=local-fs.target omarchy-configd.service
+Before=residual-executor.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/omarchy-cgroupd
+Restart=always
+RestartSec=500ms
+OOMScoreAdjust=-1000
+CPUSchedulingPolicy=fifo
+CPUSchedulingPriority=50
+MemoryMin=256M
+MemoryMax=1G
+MemoryOOMGroup=true
+CPUQuota=50%
+CapabilityBoundingSet=CAP_SYS_RESOURCE CAP_DAC_OVERRIDE CAP_SYS_NICE
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/sys/fs/cgroup /etc/omarchy-srv/live
+PrivateTmp=true
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target
