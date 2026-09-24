@@ -5,7 +5,7 @@
 
 ## Current State
 
-Architecture and interface specifications exist. The Rust core is being placed under clean-runner CI and corrected where the initial bundle made claims that exceeded implementation evidence.
+Architecture and interface specifications exist. The Rust core is under clean-runner CI, and a NixOS desired-state layer now provides the base host configuration, R720 profile, and installer-image scaffold without replacing the fast runtime control plane.
 
 The correct release posture is:
 
@@ -31,7 +31,23 @@ A checkmark in this roadmap means implementation or specification evidence exist
 - [ ] All CI jobs green on final bootstrap head
 - [ ] Merge bootstrap PR to `main`
 
-### B. R720 hardware qualification — OWNER LANE
+### B. NixOS base + reproducibility — IN PROGRESS
+
+- [x] Add Nix flake on the NixOS 26.05 release line
+- [x] Add SUBSTRATE NixOS module
+- [x] Add conservative Dell R720 hardware profile
+- [x] Add minimal installer ISO definition
+- [x] Add Nix evaluation CI
+- [x] Preserve iDRAC as a separate out-of-band trust boundary
+- [x] Preserve Btrfs for mutable-data recovery rather than package rollback
+- [ ] Commit a flake lock bound to the selected nixpkgs revision
+- [ ] Commit Cargo dependency lock/vendor closure
+- [ ] Build the Rust daemons reproducibly as a Nix package
+- [ ] Enable omarchy-configd/omarchy-cgroupd from the qualified Nix package
+- [ ] Add NixOS VM tests for service startup, failure, rollback, and path confinement
+- [ ] Bind Nix system derivation/generation to release qualification receipts
+
+### C. R720 hardware qualification — OWNER LANE
 
 - [ ] Capture immutable host/firmware/CPU/RAM/storage baseline
 - [ ] Discover NUMA topology and locality
@@ -42,7 +58,7 @@ A checkmark in this roadmap means implementation or specification evidence exist
 
 This lane is being developed separately and converges with repository release gates.
 
-### C. Interlock + failure injection — OWNER LANE
+### D. Interlock + failure injection — OWNER LANE
 
 - [ ] Implement pre-freeze/quiescence interlock
 - [ ] Prove safe behavior with open files/locks and stuck workers
@@ -53,7 +69,7 @@ This lane is being developed separately and converges with repository release ga
 - [ ] snapshot exhaustion / missing snapshot injection
 - [ ] verify evidence retention for each failure
 
-### D. Core safety and recovery — PARTIAL
+### E. Core safety and recovery — PARTIAL
 
 Implemented candidates:
 
@@ -73,7 +89,7 @@ Still required:
 - [ ] crash consistency tests
 - [ ] target-host privilege/capability review
 
-### E. Inference integration — OPEN
+### F. Inference integration — OPEN
 
 - [ ] Query installed Ollama/runtime capabilities rather than assuming them
 - [ ] model metadata ingestion for planner calibration
@@ -84,7 +100,7 @@ Still required:
 
 No tensor-split or session-persistence feature is considered available until verified against the selected runtime/version.
 
-### F. RESIDUAL MCP integration — OPEN
+### G. RESIDUAL MCP integration — OPEN
 
 - [x] Interface specification
 - [ ] MCP transport implementation
@@ -96,7 +112,7 @@ No tensor-split or session-persistence feature is considered available until ver
 - [ ] restart/replay/idempotency tests
 - [ ] RESIDUAL adapter/conformance tests
 
-### G. Security hardening — OPEN
+### H. Security hardening — OPEN
 
 - [ ] Landlock implementation and negative-path tests
 - [ ] seccomp implementation and syscall compatibility tests
@@ -108,7 +124,7 @@ No tensor-split or session-persistence feature is considered available until ver
 - [ ] network boundary review
 - [ ] audit-log tamper-resistance design/qualification
 
-### H. Release qualification — OPEN
+### I. Release qualification — OPEN
 
 A release candidate requires:
 
@@ -131,8 +147,8 @@ The project is **not production-ready** until all release-qualification gates ab
 
 1. Green the bootstrap CI and merge the complete repository baseline.
 2. Accept R720 qualification artifacts from the hardware lane.
-3. Merge/qualify the interlock and failure-injection harness.
-4. Implement the narrowest useful read-only MCP surface.
-5. Add mutating MCP tools only after authorization and rollback semantics are qualified.
-6. Run security hardening and dependency audit.
-7. Cut `v0.1.0-rc1` only from an exact qualified SHA.
+4. Merge/qualify the interlock and failure-injection harness.
+5. Implement the narrowest useful read-only MCP surface.
+6. Add mutating MCP tools only after authorization and rollback semantics are qualified.
+7. Run security hardening and dependency audit.
+8. Cut `v0.1.0-rc1` only from an exact qualified SHA.
