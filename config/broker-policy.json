@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "allowed_uids": [],
+  "read_operations": [
+    "system.identify",
+    "memory.snapshot"
+  ],
+  "service_units": [],
+  "restart_units": [],
+  "enable_service_restart": false,
+  "task_ttl_seconds": 300,
+  "approval_ttl_seconds": 30,
+  "max_calls": 32
+}

@@ -10,10 +10,12 @@
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
       substratePackage = pkgs.callPackage ./nix/package.nix { };
+      brokerPackage = pkgs.callPackage ./nix/broker-package.nix { };
     in
     {
       nixosModules.substrate = import ./nix/modules/substrate.nix;
       nixosModules.r720 = import ./nix/hardware/r720.nix;
+      nixosModules.broker = import ./nix/modules/broker.nix;
 
       nixosConfigurations.substrate-r720-eval = nixpkgs.lib.nixosSystem {
         inherit system;
@@ -43,12 +45,15 @@
       packages.${system} = {
         default = substratePackage;
         substrate = substratePackage;
+        broker = brokerPackage;
         installer =
           self.nixosConfigurations.substrate-installer.config.system.build.isoImage;
       };
 
       checks.${system} = {
         substrate-package = substratePackage;
+        broker-package = brokerPackage;
+        broker-vm = import ./nix/tests/broker.nix { inherit pkgs; };
         r720-system =
           self.nixosConfigurations.substrate-r720-eval.config.system.build.toplevel;
       };

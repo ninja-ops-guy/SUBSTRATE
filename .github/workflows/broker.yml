@@ -1,0 +1,48 @@
+name: Broker qualification
+
+on:
+  pull_request:
+  push:
+    branches: [main, "security/**"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: broker-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  broker-tests:
+    name: Broker adversarial tests (exact head)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Test task authority, durable admission, and socket boundary
+        env:
+          PYTHONPATH: broker
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: |
+          git rev-parse HEAD
+          python3 -m unittest discover -s broker/tests -v
+
+  broker-vm:
+    name: NixOS broker VM (exact head)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: cachix/install-nix-action@8aa03977d8d733052d78f4e008a241fd1dbf36b3 # v31.10.6
+      - name: Evaluate locked flake
+        run: nix flake check --no-build --no-update-lock-file
+      - name: Build and run broker package and VM tests
+        run: nix build .#checks.x86_64-linux.broker-vm --no-update-lock-file --print-build-logs
+      - name: Check source and locks were unchanged
+        run: git diff --exit-code
