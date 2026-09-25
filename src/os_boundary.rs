@@ -1,8 +1,8 @@
 //! Typed semantic OS boundary.
 //!
-//! Models and harnesses may request operations. They do not authorize them.
-//! This module is deliberately policy-only: privileged execution belongs in
-//! a separately qualified broker/helper.
+//! Classification is not authorization. The broker validates caller identity,
+//! server-issued task scope, arguments and approvals before any dispatch.
+//! Rust and the broker share the same version-controlled operation catalog.
 
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -17,6 +17,7 @@ pub enum PermissionClass {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct OperationRequest {
     pub task_id: String,
     pub operation: String,
@@ -31,42 +32,37 @@ pub struct ClassifiedRequest {
     pub requires_privilege: bool,
 }
 
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct OperationMetadata {
+    permission_class: PermissionClass,
+    requires_privilege: bool,
+}
+
 #[derive(Debug, Error, PartialEq, Eq)]
 pub enum BoundaryError {
     #[error("unknown OS operation: {0}")]
     UnknownOperation(String),
     #[error("task_id must not be empty")]
     MissingTaskId,
+    #[error("invalid embedded operation catalog")]
+    InvalidCatalog,
 }
 
 pub fn classify(request: OperationRequest) -> Result<ClassifiedRequest, BoundaryError> {
     if request.task_id.trim().is_empty() {
         return Err(BoundaryError::MissingTaskId);
     }
-
-    let (permission_class, requires_privilege) = match request.operation.as_str() {
-        "system.identify" | "memory.snapshot" | "crash.list" | "crash.inspect"
-        | "journal.query" | "service.status" | "package.query" | "network.snapshot"
-        | "cgroup.usage" | "governor.metrics" | "snapshot.list" => (PermissionClass::Read, false),
-
-        "service.restart" | "package.install" | "config.patch" | "snapshot.create" => {
-            (PermissionClass::Change, true)
-        }
-
-        "snapshot.rollback"
-        | "cgroup.set_limit"
-        | "governor.set_policy"
-        | "system.boot_config"
-        | "storage.partition"
-        | "security.policy_change" => (PermissionClass::Dangerous, true),
-
-        other => return Err(BoundaryError::UnknownOperation(other.to_owned())),
-    };
-
+    let catalog: BTreeMap<String, OperationMetadata> =
+        serde_json::from_str(include_str!("os_operations.json"))
+            .map_err(|_| BoundaryError::InvalidCatalog)?;
+    let metadata = catalog
+        .get(&request.operation)
+        .ok_or_else(|| BoundaryError::UnknownOperation(request.operation.clone()))?;
     Ok(ClassifiedRequest {
         request,
-        permission_class,
-        requires_privilege,
+        permission_class: metadata.permission_class,
+        requires_privilege: metadata.requires_privilege,
     })
 }
 
@@ -109,5 +105,22 @@ mod tests {
             classify(request("shell.exec")),
             Err(BoundaryError::UnknownOperation("shell.exec".into()))
         );
+    }
+
+    #[test]
+    fn catalog_contains_all_contract_operations() {
+        let catalog: BTreeMap<String, OperationMetadata> =
+            serde_json::from_str(include_str!("os_operations.json")).unwrap();
+        assert_eq!(catalog.len(), 21);
+        for operation in catalog.keys() {
+            assert!(classify(request(operation)).is_ok());
+        }
+    }
+
+    #[test]
+    fn request_cannot_supply_its_own_permission_class() {
+        let forged =
+            r#"{"task_id":"task-1","operation":"service.restart","permission_class":"READ"}"#;
+        assert!(serde_json::from_str::<OperationRequest>(forged).is_err());
     }
 }

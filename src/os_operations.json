@@ -1,0 +1,86 @@
+{
+  "cgroup.set_limit": {
+    "permission_class": "DANGEROUS",
+    "requires_privilege": true
+  },
+  "cgroup.usage": {
+    "permission_class": "READ",
+    "requires_privilege": false
+  },
+  "config.patch": {
+    "permission_class": "CHANGE",
+    "requires_privilege": true
+  },
+  "crash.inspect": {
+    "permission_class": "READ",
+    "requires_privilege": false
+  },
+  "crash.list": {
+    "permission_class": "READ",
+    "requires_privilege": false
+  },
+  "governor.metrics": {
+    "permission_class": "READ",
+    "requires_privilege": false
+  },
+  "governor.set_policy": {
+    "permission_class": "DANGEROUS",
+    "requires_privilege": true
+  },
+  "journal.query": {
+    "permission_class": "READ",
+    "requires_privilege": false
+  },
+  "memory.snapshot": {
+    "permission_class": "READ",
+    "requires_privilege": false
+  },
+  "network.snapshot": {
+    "permission_class": "READ",
+    "requires_privilege": false
+  },
+  "package.install": {
+    "permission_class": "CHANGE",
+    "requires_privilege": true
+  },
+  "package.query": {
+    "permission_class": "READ",
+    "requires_privilege": false
+  },
+  "security.policy_change": {
+    "permission_class": "DANGEROUS",
+    "requires_privilege": true
+  },
+  "service.restart": {
+    "permission_class": "CHANGE",
+    "requires_privilege": true
+  },
+  "service.status": {
+    "permission_class": "READ",
+    "requires_privilege": false
+  },
+  "snapshot.create": {
+    "permission_class": "CHANGE",
+    "requires_privilege": true
+  },
+  "snapshot.list": {
+    "permission_class": "READ",
+    "requires_privilege": false
+  },
+  "snapshot.rollback": {
+    "permission_class": "DANGEROUS",
+    "requires_privilege": true
+  },
+  "storage.partition": {
+    "permission_class": "DANGEROUS",
+    "requires_privilege": true
+  },
+  "system.boot_config": {
+    "permission_class": "DANGEROUS",
+    "requires_privilege": true
+  },
+  "system.identify": {
+    "permission_class": "READ",
+    "requires_privilege": false
+  }
+}
